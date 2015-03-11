@@ -35,7 +35,10 @@
         <textarea id='query-text' rows='4' cols='50' name='content'>select StatSessionDuration, StatEVBigBlindsPer100 from stats group by StatSessionGrouping</textarea> 
         <ul>
           <li>
-            <input id='group-by-session-length' type='checkbox'> Group by Session Length 
+            <input id='group-by' type='checkbox'> Group by <input id='group-by-col' type='text' value='SessionLength(Minutes)'> with group size <input id='group-by-size' type='number' value='75'>
+          </li>
+          <li>
+            <input id='sort-by' type='checkbox'> Sort by <input id='sort-by-col' type='text' value='SessionStartTime'>
           </li>
         </ul>
       </div>

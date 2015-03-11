@@ -7,8 +7,17 @@ $(document).ready(function() {
 
     HEM.logErrors(data.Errors);
     HEM.logResults(data);
-    if($('#group-by-session-length')[0].checked == true) {
-      data.Results = HEM.groupBySessionLength(data.Results);
+
+    data.Results = HEM.parseValues(data.Results);
+    if($('#group-by')[0].checked == true) {
+      var groupByColumn = $('#group-by-col').val();
+      var groupBySize = $('#group-by-size').val();
+      data.Results = HEM.groupBy(data.Results, groupByColumn, groupBySize);
+    }
+
+    if($('#sort-by')[0].checked == true) {
+      var sortByColumn = $('#sort-by-col').val();
+      data.Results = HEM.sortBy(data.Results, sortByColumn);
     }
 
     if(data.Results && data.Results.length > 0) {

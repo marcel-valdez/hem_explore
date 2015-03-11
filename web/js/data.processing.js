@@ -3,43 +3,91 @@ $(document).ready(function() {
     HEM = {};
   }
 
-  HEM['groupBySessionLength'] = function(results) {
+  var stripNumberStr = function(value) {
+    if(typeof value.replace !== 'undefined') 
+      return value.replace(/,/g, '');
+
+    return value;
+  };
+
+  var isNumberStr = function(value) {
+    return typeof(value) !== "number" && !isNaN(stripNumberStr(value));
+  };
+
+  var isDateStr = function(value) {
+    return Date.parse(value) !== "Invalid Date" && !isNaN(Date.parse(value));
+  };
+
+  HEM['parseValues'] = function(results) {
+    return _.map(
+      results,
+      function(result, index) {
+        return _.reduce(
+          _.keys(result),
+          function(parsedResult, key) {
+            if(isNumberStr(result[key])) {
+              parsedResult[key] = parseFloat(stripNumberStr(result[key]));
+            } else if(isDateStr(result[key])) {
+              parsedResult[key] = new Date(result[key]);
+            } else {
+              parsedResult[key] = result[key];
+            }
+
+            return parsedResult;
+          },
+          {}
+        );
+      }
+    );
+  };
+
+  HEM['sortBy'] = function(results, sortColumn) {
+    return _.sortBy(results, function(result) { return result[sortColumn]; });
+  };
+
+  HEM['groupBy'] = function(results, groupColumn, groupSize) {
     var NONE = "N/A";
-    var LEN_KEY = 'SessionLength(Minutes)';
-    var MINUTES = 45;
-    if(results.length > 0 && results[0][LEN_KEY]) {
+    if(results.length > 0 && results[0][groupColumn]) {
       var groupedBySessionLength = 
       // Group in hour ranges
       _.chain(results)
        .groupBy(function(result) {
-          return Math.ceil(result[LEN_KEY] / MINUTES);
+          var max = null;
+          if(result[groupColumn] instanceof Date) {
+            max = Math.ceil(result[groupColumn].getHours() / groupSize) * groupSize;
+          } else  {
+            max = Math.ceil(result[groupColumn] / groupSize) * groupSize;
+          }
+
+          var min = Math.max(0, max - groupSize);
+          return min + " - " + max;
         })
-       .map(function(group, hours) {
+       .map(function(group, groupRange) {
+          var groupRangeColumnName = groupColumn + 'Group';
           var averaged = {
-            'SessionLengthGroup' : (hours * (MINUTES / 60)) + " hrs",
             'Count' : group.length
           };
+
+          averaged[groupRangeColumnName] = groupRange;
           // For each key in a group
           _.each(_.keys(group[0]),
             function(key) {
               // Get average for the key
-              console.log(_.values(group));
               var total = _.reduce(_.values(group),
                 function(accum, session) {
-                  if(parseFloat(session[LEN_KEY]) >= 10) {
-                    var value = session[key].replace(/,/g, '');
-                    if(!isNaN(value)) {
-                      var valueNum = parseFloat(value);
-                      accum.sum += valueNum;
-                      if(accum.max == NONE || accum.max < valueNum) {
-                        accum.max = valueNum;
-                      }
-                      if(accum.min == NONE || accum.min > valueNum) {
-                        accum.min = valueNum;
-                      }
-                      accum.count++;
+                  if(typeof(session[key]) === 'number') {
+                    var valueNum = session[key];
+                    var valueNum = parseFloat(stripNumberStr(session[key]));
+                    accum.sum += valueNum;
+                    if(accum.max == NONE || accum.max < valueNum) {
+                      accum.max = valueNum;
                     }
+                    if(accum.min == NONE || accum.min > valueNum) {
+                      accum.min = valueNum;
+                    }
+                    accum.count++;
                   }
+
                   return accum;
                 }, {
                   sum: 0,
@@ -59,7 +107,6 @@ $(document).ready(function() {
             });
           return averaged;
         }).value();
-      console.log(groupedBySessionLength);
       return _.values(groupedBySessionLength);
     }
     return results;

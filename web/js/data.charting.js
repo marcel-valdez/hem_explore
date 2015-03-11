@@ -20,14 +20,14 @@ $(document).ready(function() {
     }
 
     var dataPoints = _.map(data.Results, function(row) {
-      return [row[xAxisRowKey], row[yAxisRowKey]];
+      return [
+               row[xAxisRowKey].toString().substring(0,5),
+               row[yAxisRowKey]
+             ];
     });
-
-    console.log(dataPoints);
 
     var plot = $.jqplot('chart', [dataPoints], {
       title: xAxisRowKey + ' vs. ' + yAxisRowKey,
-      //series: [{renderer: $.jqplot.BarRenderer}],
       axesDefaults: {
         tickRenderer: $.jqplot.CanvasAxisTickRenderer,
         tickOptions: {

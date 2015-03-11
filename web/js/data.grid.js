@@ -9,7 +9,14 @@ $(document).ready(function() {
       height: 250,
       colNames: _.keys(data.Results[0]),
       colModel: _.map(_.keys(data.Results[0]), function(key) {
-        return { 'name': key, 'index': key }
+        var model = { 'name': key, 'index': key };
+        if(typeof(data.Results[0][key]) === "number") {
+          model['sorttype'] = 'int';
+        } else if(data.Results[0][key] instanceof Date) {
+          model['sorttype'] = 'date';
+        }
+
+        return model;
       }),
       multiselect: true,
       caption: data.ResultType,
